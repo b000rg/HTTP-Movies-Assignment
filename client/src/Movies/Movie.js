@@ -1,40 +1,65 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import MovieCard from "./MovieCard";
 
-function Movie({ addToSavedList }) {
-  const [movie, setMovie] = useState(null);
-  const params = useParams();
+function Movie(props) {
+    const [movie, setMovie] = useState(null);
+    const params = useParams();
+    const history = useHistory();
 
-  const fetchMovie = (id) => {
-    axios
-      .get(`http://localhost:5000/api/movies/${id}`)
-      .then((res) => setMovie(res.data))
-      .catch((err) => console.log(err.response));
-  };
+    const fetchMovie = (id) => {
+        axios
+            .get(`http://localhost:5000/api/movies/${id}`)
+            .then((res) => setMovie(res.data))
+            .catch((err) => console.log(err.response));
+    };
 
-  const saveMovie = () => {
-    addToSavedList(movie);
-  };
+    const saveMovie = () => {
+        props.addToSavedList(movie);
+    };
 
-  useEffect(() => {
-    fetchMovie(params.id);
-  }, [params.id]);
+    const deleteMovie = (id) => {
+        axios
+            .delete(`http://localhost:5000/api/movies/${params.id}`)
+            .then((res) => {
+                props.getMovieList();
+                history.push("/");
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    };
 
-  if (!movie) {
-    return <div>Loading movie information...</div>;
-  }
+    useEffect(() => {
+        fetchMovie(params.id);
+    }, [params.id]);
 
-  return (
-    <div className="save-wrapper">
-      <MovieCard movie={movie} />
+    if (!movie) {
+        return <div>Loading movie information...</div>;
+    }
 
-      <div className="save-button" onClick={saveMovie}>
-        Save
-      </div>
-    </div>
-  );
+    return (
+        <div className="save-wrapper">
+            <MovieCard movie={movie} />
+            <span className="buttons-wrapper">
+                <div className="movie-card-button" onClick={saveMovie}>
+                    Save
+                </div>
+                <div
+                    className="movie-card-button"
+                    onClick={() => {
+                        history.push(`/update-movie/${params.id}`);
+                    }}
+                >
+                    Edit
+                </div>
+                <div className="movie-card-button" onClick={deleteMovie}>
+                    Delete
+                </div>
+            </span>
+        </div>
+    );
 }
 
 export default Movie;
